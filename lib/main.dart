@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'screens/camera_screen.dart';
+import 'package:provider/provider.dart';
+import 'providers/course_provider.dart';
+import 'providers/settings_provider.dart';
+import 'screens/home_screen.dart';
 
 List<CameraDescription> cameras = [];
 
@@ -20,19 +23,26 @@ class MathBuddyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Bottle Cap Math',
-      theme: ThemeData(
-        textTheme: GoogleFonts.nunitoTextTheme(),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF448AFF),
-          primary: const Color(0xFF448AFF),
-          secondary: const Color(0xFFFF5252),
-          surface: Colors.white,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CourseProvider()),
+        ChangeNotifierProvider(
+            create: (_) => SettingsProvider()..loadSettings()),
+      ],
+      child: MaterialApp(
+        title: 'Bottle Cap Math',
+        theme: ThemeData(
+          textTheme: GoogleFonts.nunitoTextTheme(),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF448AFF),
+            primary: const Color(0xFF448AFF),
+            secondary: const Color(0xFFFF5252),
+            surface: Colors.white,
+          ),
+          useMaterial3: true,
         ),
-        useMaterial3: true,
+        home: const HomeScreen(),
       ),
-      home: CameraScreen(cameras: cameras),
     );
   }
 }
