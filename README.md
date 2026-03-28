@@ -4,7 +4,7 @@ MathBuddy is an educational Flutter application designed for children. It uses o
 
 ---
 
-## 🛠 Project History & Technical Milestones
+## Project History & Technical Milestones
 
 This section serves as a technical log for future AI agents and developers.
 
@@ -28,7 +28,7 @@ This section serves as a technical log for future AI agents and developers.
 
 ---
 
-## ✨ Recently Implemented Features
+## Recently Implemented Features
 
 ### 1. High-Fidelity Child-Friendly UI
 *   **HomeScreen Overhaul**: Completely redesigned with a soft cream dotted background, a "Math Buddy" header with a robot mascot, and 3D squishy `AnimatedPuffyButton`s for navigation.
@@ -52,12 +52,12 @@ This section serves as a technical log for future AI agents and developers.
 
 ---
 
-## 💻 Tech Stack
+## Tech Stack
 *   **Framework**: Flutter
 *   **AI**: TensorFlow Lite (YOLOv5/v8 model)
 *   **Utilities**: Google Fonts (Nunito), Text-to-Speech.
 
-## 📥 Setup
+## Setup
 1.  Add `assets/models/best_float32.tflite` and `labels.txt`.
 2.  Run `flutter pub get`.
 3.  Deploy to a physical device (required for camera/TFLite performance).
