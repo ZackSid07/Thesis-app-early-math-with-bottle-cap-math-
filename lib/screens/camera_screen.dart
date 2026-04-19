@@ -10,6 +10,7 @@ import '../providers/course_provider.dart';
 import '../services/yolo_service.dart';
 import '../theme/app_theme.dart';
 import 'hint_screen.dart';
+import 'revealed_answer_screen.dart';
 
 class CameraScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -192,6 +193,39 @@ class _CameraScreenState extends State<CameraScreen> {
       return;
     }
 
+    // 1.5 Geometry Filter (Remove edge noise and skewed alignment)
+    List<Map<String, dynamic>> rule1Filtered = [];
+    for (var det in validDetections) {
+      double y1 = det['box'][1]; // top edge
+      if (y1 >= 100.0) {
+        rule1Filtered.add(det);
+      }
+    }
+
+    List<Map<String, dynamic>> cleanDetections = [];
+    if (rule1Filtered.isNotEmpty) {
+      double totalY = 0;
+      for (var det in rule1Filtered) {
+        totalY += det['box'][1];
+      }
+      double averageY = totalY / rule1Filtered.length;
+
+      for (var det in rule1Filtered) {
+        double y1 = det['box'][1];
+        if ((y1 - averageY).abs() <= 300.0) {
+          cleanDetections.add(det);
+        }
+      }
+    }
+    
+    debugPrint('Filtered Detections: $cleanDetections');
+    validDetections = cleanDetections;
+
+    if (validDetections.isEmpty) {
+      _updateFeedback("No aligned equation found.", Colors.orange);
+      return;
+    }
+
     // 2. Sort by X-Axis (Left-to-Right)
     validDetections.sort((a, b) {
       double centerA = (a['box'][0] + a['box'][2]) / 2;
@@ -231,6 +265,14 @@ class _CameraScreenState extends State<CameraScreen> {
       double centerB = (b['box'][0] + b['box'][2]) / 2;
       return centerA.compareTo(centerB);
     });
+
+    // 3.5 Positional Heuristic: Forced Equals
+    if (uniqueDetections.length == 5) {
+      if (uniqueDetections[3]['symbol'] == '+' || uniqueDetections[3]['symbol'] == '-') {
+        uniqueDetections[3]['symbol'] = '=';
+        debugPrint('Heuristic Applied: Forced index 3 to equal sign');
+      }
+    }
 
     // 4. Construct Equation
     StringBuffer equationBuffer = StringBuffer();
@@ -495,7 +537,7 @@ class _CameraScreenState extends State<CameraScreen> {
     _updateFeedback(
         "Incorrect. $num1 $op $num2 is NOT $detectedAnswer", Colors.red);
 
-    if (consecutiveMistakes < 2) {
+    if (consecutiveMistakes == 1) {
       _flutterTts.speak("Not quite! Try one more time.");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -507,6 +549,21 @@ class _CameraScreenState extends State<CameraScreen> {
           )
         );
       }
+    } else if (consecutiveMistakes == 2) {
+      _controller.pausePreview();
+      
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HintScreen(
+            childsEquation: currentWrongEq,
+            correctEquation: actualCorrectEq,
+          ),
+        ),
+      ).then((_) {
+        _controller.resumePreview();
+        _updateFeedback("Align caps and press Check", Colors.white);
+      });
     } else {
       consecutiveMistakes = 0;
       _controller.pausePreview();
@@ -514,7 +571,7 @@ class _CameraScreenState extends State<CameraScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => HintScreen(
+          builder: (context) => RevealedAnswerScreen(
             childsEquation: currentWrongEq,
             correctEquation: actualCorrectEq,
           ),

@@ -24,13 +24,14 @@ class HintScreen extends StatefulWidget {
 
 class _HintScreenState extends State<HintScreen> {
   final FlutterTts _flutterTts = FlutterTts();
-  final GeminiService _geminiService = GeminiService(apiKey: 'AIzaSyAOch9QX3nHM1vNtsb5e-Qn19_H4tXTUBE');
+  final GeminiService _geminiService = GeminiService(apiKey: 'AIzaSyDRDcQYnmddI3te0Wp5nv-LQmpw3bhKaN0');
   bool _isLoadingGemini = false;
   
   int _num1 = 0;
   String _operator = '+';
   int _num2 = 0;
   bool _canParse = false;
+  String explanationText = "Let's count ALL of them together!";
 
   @override
   void initState() {
@@ -68,8 +69,13 @@ class _HintScreenState extends State<HintScreen> {
       return;
     }
     setState(() => _isLoadingGemini = true);
-    String expl = await _geminiService.generateAppleExplanation(_num1, _operator, _num2);
-    if (mounted) setState(() => _isLoadingGemini = false);
+    String expl = await _geminiService.generateHintStory(_num1, _operator, _num2);
+    if (mounted) {
+      setState(() {
+        _isLoadingGemini = false;
+        explanationText = expl;
+      });
+    }
     await _flutterTts.speak(expl);
   }
 
@@ -179,8 +185,9 @@ class _HintScreenState extends State<HintScreen> {
                   // Hint Card
                   if (_canParse)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 0.0),
                       child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16.0),
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -231,7 +238,11 @@ class _HintScreenState extends State<HintScreen> {
                                 color: const Color(0xFFF8FAFC),
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Row(
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 8.0,
+                                runSpacing: 8.0,
                                 children: [
                                   Wrap(
                                     children: List.generate(_num1, (index) => 
@@ -241,15 +252,14 @@ class _HintScreenState extends State<HintScreen> {
                                       )
                                     ),
                                   ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Text(
-                                      "First, we have $_num1.",
-                                      style: const TextStyle(
-                                        color: Color(0xFF334155),
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                  Text(
+                                    "First, we have $_num1.",
+                                    softWrap: true,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Color(0xFF334155),
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                   GestureDetector(
@@ -285,6 +295,8 @@ class _HintScreenState extends State<HintScreen> {
                                   Expanded(
                                     child: Text(
                                       _operator == '-' ? "Then we take away $_num2." : "Then we add $_num2.",
+                                      softWrap: true,
+                                      textAlign: TextAlign.left,
                                       style: const TextStyle(
                                         color: Color(0xFF334155),
                                         fontSize: 18,
@@ -301,13 +313,18 @@ class _HintScreenState extends State<HintScreen> {
                             ),
                             const SizedBox(height: 32),
                             
-                            const Text(
-                              "Let's count ALL of them together!",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Color(0xFF1A237E),
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                            GestureDetector(
+                              onTap: () async {
+                                await _flutterTts.speak(explanationText);
+                              },
+                              child: Text(
+                                explanationText,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Color(0xFF1A237E),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],

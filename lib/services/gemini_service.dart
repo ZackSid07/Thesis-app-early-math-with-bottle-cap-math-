@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class GeminiService {
@@ -6,7 +7,7 @@ class GeminiService {
 
   GeminiService({required this.apiKey}) {
     _model = GenerativeModel(
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3-flash-preview',
       apiKey: apiKey,
     );
   }
@@ -47,19 +48,39 @@ You are a gentle, encouraging math tutor for young children. The child attempted
     }
   }
 
-  /// Generates a creative story explaining the math using apples.
-  Future<String> generateAppleExplanation(int num1, String operator, int num2) async {
+  /// Generates a creative hint story explaining the math using apples, without answering.
+  Future<String> generateHintStory(
+      int num1, String operator, int num2) async {
     final prompt = '''
-Write a 2-sentence creative story explaining how $num1 $operator $num2 equals the answer, using apples as the example. Keep it very simple for a 5-year-old.
+You are a kindergarten teacher giving a hint for the math problem $num1 $operator $num2. CRITICAL: DO NOT REVEAL THE FINAL ANSWER. Write a short, creative 2-sentence story using apples. If '+', talk about getting more apples. If '-', talk about taking apples away. End the story by asking the child to try counting them! Use very basic words, ellipses (...) for TTS pauses, and exclamation points (!).
 ''';
 
     try {
       final content = [Content.text(prompt)];
       final response = await _model.generateContent(content);
-      return response.text?.trim() ?? "Let's count the apples together to find the answer!";
+      return response.text?.trim() ??
+          "Let's count all the apples to find the answer!";
     } catch (e) {
-      print("Gemini API Error (Apple Explanation): $e");
-      return "Let's count the apples together to find the answer!";
+      debugPrint("GEMINI API FATAL ERROR: $e");
+      return "Let's count all the apples to find the answer!";
+    }
+  }
+
+  /// Generates a creative story explaining the math using apples and reveals the answer explicitly.
+  Future<String> generateRevealedStory(
+      int num1, String operator, int num2, int answer) async {
+    final prompt = '''
+You are a kindergarten teacher explaining how $num1 $operator $num2 equals $answer using apples. Write a short, creative 2-sentence story. CRITICAL: You MUST end the text by explicitly counting up to the answer. For example: 'Let's count them together... 1... 2... $answer!'. Use very basic words, and use ellipses (...) so the TTS voice pauses between each number.
+''';
+
+    try {
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content);
+      return response.text?.trim() ??
+          "Let's count the apples together to find the answer! It is $answer!";
+    } catch (e) {
+      debugPrint("GEMINI API FATAL ERROR: $e");
+      return "Let's count the apples together to find the answer! It is $answer!";
     }
   }
 }

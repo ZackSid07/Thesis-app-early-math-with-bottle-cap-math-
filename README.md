@@ -50,6 +50,12 @@ This section serves as a technical log for future AI agents and developers.
 *   **Persistent Progress**: Overhauled the `CourseProvider` to automatically save the child's `highestUnlockedLevelId` into local storage (`SharedPreferences`) the moment a level is completed.
 *   **Seamless Resumption**: App initialization invokes `loadProgress()` to instantly rebuild the course progression map precisely where the user left off.
 
+### 6. Enhanced 3-Strike Error Logic & AI Integration
+*   **3-Strike Fallback Flow**: Implemented an escalating feedback loop (`Snackbar` -> `HintScreen` -> `RevealedAnswerScreen`) tracking `consecutiveMistakes` directly in the Camera analysis pipeline.
+*   **Decoupled Gemini Prompts**: Migrated the AI engine to `gemini-3-flash-preview` and separated textual generation. `HintScreen` receives creative, non-giveaway pedagogical stories, while `RevealedAnswerScreen` calculates and explicitly reveals the mathematical answer natively via TTS.
+*   **Revealed Answer UI**: Built `RevealedAnswerScreen` to dynamically render custom interactive Apple sequences, seamlessly parse equation arrays, and provide step-by-step counting visual aids.
+*   **Positional Filter Heuristics**: Added a strict post-processing geometric Y-axis filter and a structural 5-element equals-sign heuristic rule to mitigate camera edge phantom noise and YOLO operator misclassifications natively.
+
 ---
 
 ## Tech Stack
