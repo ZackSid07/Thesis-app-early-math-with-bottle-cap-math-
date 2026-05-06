@@ -70,7 +70,7 @@ You are a kindergarten teacher giving a hint for the math problem $num1 $operato
   Future<String> generateRevealedStory(
       int num1, String operator, int num2, int answer) async {
     final prompt = '''
-You are a kindergarten teacher explaining how $num1 $operator $num2 equals $answer using apples. Write a short, creative 2-sentence story. CRITICAL: You MUST end the text by explicitly counting up to the answer. For example: 'Let's count them together... 1... 2... $answer!'. Use very basic words, and use ellipses (...) so the TTS voice pauses between each number.
+You are a kindergarten teacher slowly demonstrating how $num1 $operator $num2 equals $answer using apples. CRITICAL INSTRUCTION: You MUST explicitly count the apples out loud in your text. Use ellipses (...) between EVERY number to force the robot voice to pause. Example format for addition: 'First we have 1... 2... apples! Then we add 1... 2... 3... more! Let's count them all together! 1... 2... 3... 4... 5! The answer is 5!' Example for subtraction: 'We start with 1... 2... 3... apples! Then we take away 1... apple! Let's see what is left... 1... 2! The answer is 2!' Keep it strictly to this pacing.
 ''';
 
     try {

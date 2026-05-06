@@ -16,9 +16,9 @@ class RevealedAnswerScreen extends StatefulWidget {
   State<RevealedAnswerScreen> createState() => _RevealedAnswerScreenState();
 }
 
-class _RevealedAnswerScreenState extends State<RevealedAnswerScreen> {
+class _RevealedAnswerScreenState extends State<RevealedAnswerScreen> with SingleTickerProviderStateMixin {
   final FlutterTts _flutterTts = FlutterTts();
-  final GeminiService _geminiService = GeminiService(apiKey: 'AIzaSyDRDcQYnmddI3te0Wp5nv-LQmpw3bhKaN0');
+  final GeminiService _geminiService = GeminiService(apiKey: 'AIzaSyAHnn1Atu1EATqEDU7M-fXphjJd29ZEfwo');
   bool _isLoadingGemini = false;
 
   int _num1 = 0;
@@ -28,17 +28,24 @@ class _RevealedAnswerScreenState extends State<RevealedAnswerScreen> {
   bool _canParse = false;
   String explanationText = "";
 
+  late AnimationController _animationController;
+
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5000),
+    );
     _initTts();
     _parseCorrectEquation();
   }
 
   Future<void> _initTts() async {
     await _flutterTts.setLanguage("en-US");
-    await _flutterTts.setSpeechRate(0.45);
+    await _flutterTts.setSpeechRate(0.35);
     await _flutterTts.setPitch(1.1);
+    await _flutterTts.awaitSpeakCompletion(true);
   }
 
   void _parseCorrectEquation() {
@@ -64,6 +71,31 @@ class _RevealedAnswerScreenState extends State<RevealedAnswerScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playTextAndAnimation(String text) async {
+    int totalApples = _num1 + _num2 + _answer;
+    int durationMs = totalApples > 0 ? totalApples * 1200 : 1200;
+    _animationController.duration = Duration(milliseconds: durationMs);
+
+    int startIndex = text.indexOf('1...');
+    if (startIndex != -1) {
+      String intro = text.substring(0, startIndex);
+      String counting = text.substring(startIndex);
+      
+      await _flutterTts.speak(intro);
+      _animationController.forward(from: 0.0);
+      await _flutterTts.speak(counting);
+    } else {
+      _animationController.forward(from: 0.0);
+      await _flutterTts.speak(text);
+    }
+  }
+
   void _playGeminiExplanation() async {
     if (!_canParse) return;
     setState(() => _isLoadingGemini = true);
@@ -74,7 +106,42 @@ class _RevealedAnswerScreenState extends State<RevealedAnswerScreen> {
         explanationText = expl;
       });
     }
-    await _flutterTts.speak(expl);
+    
+    await _playTextAndAnimation(expl);
+  }
+
+  Widget _buildAnimatedApple(int index, int totalApples) {
+    double start = totalApples == 0 ? 0.0 : index / totalApples;
+    double end = totalApples == 0 ? 1.0 : (index + 1) / totalApples;
+    if (end > 1.0) end = 1.0;
+
+    final scaleAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Interval(start, end, curve: Curves.bounceOut),
+      ),
+    );
+
+    final fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Interval(start, end, curve: Curves.easeIn),
+      ),
+    );
+
+    return FadeTransition(
+      opacity: fadeAnimation,
+      child: ScaleTransition(
+        scale: scaleAnimation,
+        child: const Text("🍎", style: TextStyle(fontSize: 24)),
+      ),
+    );
   }
 
   Widget _buildCap(String text, Color color) {
@@ -234,18 +301,30 @@ class _RevealedAnswerScreenState extends State<RevealedAnswerScreen> {
                           crossAxisAlignment: WrapCrossAlignment.center,
                           spacing: 8,
                           children: [
-                            Wrap(children: List.generate(_num1, (i) => const Text("🍎", style: TextStyle(fontSize: 24)))),
+                            Wrap(
+                              children: List.generate(_num1, (i) => 
+                                _buildAnimatedApple(i, _num1 + _num2 + _answer)
+                              ),
+                            ),
                             Text(" $_operator ", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue)),
-                            Wrap(children: List.generate(_num2, (i) => const Text("🍎", style: TextStyle(fontSize: 24)))),
+                            Wrap(
+                              children: List.generate(_num2, (i) => 
+                                _buildAnimatedApple(_num1 + i, _num1 + _num2 + _answer)
+                              ),
+                            ),
                             const Text(" = ", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.grey)),
-                            Wrap(children: List.generate(_answer, (i) => const Text("🍎", style: TextStyle(fontSize: 24)))),
+                            Wrap(
+                              children: List.generate(_answer, (i) => 
+                                _buildAnimatedApple(_num1 + _num2 + i, _num1 + _num2 + _answer)
+                              ),
+                            ),
                           ],
                         ),
                         
                         const SizedBox(height: 16),
                         GestureDetector(
                           onTap: () async {
-                            await _flutterTts.speak(explanationText);
+                            await _playTextAndAnimation(explanationText);
                           },
                           child: Text(
                             explanationText,

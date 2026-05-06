@@ -24,7 +24,7 @@ class HintScreen extends StatefulWidget {
 
 class _HintScreenState extends State<HintScreen> {
   final FlutterTts _flutterTts = FlutterTts();
-  final GeminiService _geminiService = GeminiService(apiKey: 'AIzaSyDRDcQYnmddI3te0Wp5nv-LQmpw3bhKaN0');
+  final GeminiService _geminiService = GeminiService(apiKey: 'AIzaSyAHnn1Atu1EATqEDU7M-fXphjJd29ZEfwo');
   bool _isLoadingGemini = false;
   
   int _num1 = 0;
